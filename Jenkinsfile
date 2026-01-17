@@ -16,13 +16,9 @@ node {
     }
 
     stage('Push image') {
-      steps {
-        script {
-          docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push('latest')
-          }
-        }
+      docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+        app.push("${env.BUILD_NUMBER}")
+        app.push('latest')
       }
     }
 
