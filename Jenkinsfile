@@ -26,13 +26,14 @@ node {
         'sys.exit(0 if score >= 8.0 else 1)' \
         > .ci_pylint_gate.py
 
-      docker run --rm \
-        -v "$PWD:/work" -w /work \
-        python:3.8-slim-buster sh -c '
-          set -eu
-          pip install --no-cache-dir -q pylint
-          python .ci_pylint_gate.py
-        '
+        docker run --rm \
+          -v "$PWD:/work" -w /work \
+          python:3.8-slim-buster sh -c '
+            set -eu
+            pip install --no-cache-dir -q -r requirements.txt
+            pip install --no-cache-dir -q pylint
+            python .ci_pylint_gate.py
+          '
     '''
   }
 
