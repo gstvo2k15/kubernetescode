@@ -66,9 +66,13 @@ node {
   }
 
   stage('Trigger ManifestUpdate') {
-    build job: 'updatemanifest',
-          parameters: [string(name: 'DOCKERTAG', value: imageTag)],
-          wait: false,
-          propagate: false
+    if (env.JOB_NAME == 'buildimage') {
+      build job: 'updatemanifest',
+            parameters: [string(name: 'DOCKERTAG', value: imageTag)],
+            wait: false,
+            propagate: false
+    } else {
+      echo "Skipping downstream trigger on job: ${env.JOB_NAME}"
+    }
   }
 }
