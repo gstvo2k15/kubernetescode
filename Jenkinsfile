@@ -16,9 +16,13 @@ node {
     }
 
     stage('Push image') {
-        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push('latest')
+        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DH_USER', passwordVariable: 'DH_TOKEN')]) {
+            sh '''
+              set -e
+              echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin https://index.docker.io/v1/
+              docker push gstvo2k15/test:${BUILD_NUMBER}
+              docker push gstvo2k15/test:latest
+            '''
         }
     }
 
