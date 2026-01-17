@@ -21,10 +21,14 @@ node {
     }
 
     stage('Push image') {
-        
-        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+      steps {
+        script {
+          docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
             app.push("${env.BUILD_NUMBER}")
+            app.push('latest')
+          }
         }
+      }
     }
     
     stage('Trigger ManifestUpdate') {
