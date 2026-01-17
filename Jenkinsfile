@@ -19,13 +19,13 @@ node {
 
   stage('Push image') {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DH_USER', passwordVariable: 'DH_TOKEN')]) {
-      sh '''
+      sh """
         set -e
-        echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin https://index.docker.io/v1/
+        echo "\$DH_TOKEN" | docker login -u "\$DH_USER" --password-stdin https://index.docker.io/v1/
         docker push ${imageRepo}:${imageTag}
         docker tag  ${imageRepo}:${imageTag} ${imageRepo}:latest
         docker push ${imageRepo}:latest
-      '''
+      """
     }
   }
 
