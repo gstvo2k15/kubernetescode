@@ -4,6 +4,18 @@ node {
   def imageTag  = "${env.BUILD_NUMBER}-${gitSha}"
   def app
 
+  if (env.JOB_NAME == 'updatemanifest') {
+    stage('Clone repository') {
+      checkout scm
+    }
+
+    stage('Update manifest') {
+      sh 'echo "Update manifest with tag: ${DOCKERTAG}"'
+    }
+
+    return
+  }
+
   stage('Clone repository') {
     checkout scm
   }
@@ -26,14 +38,14 @@ node {
         'sys.exit(0 if score >= 8.0 else 1)' \
         > .ci_pylint_gate.py
 
-        docker run --rm \
-          -v "$PWD:/work" -w /work \
-          python:3.8-slim-buster sh -c '
-            set -eu
-            pip install --no-cache-dir -q -r requirements.txt
-            pip install --no-cache-dir -q pylint
-            python .ci_pylint_gate.py
-          '
+      docker run --rm \
+        -v "$PWD:/work" -w /work \
+        python:3.8-slim-buster sh -c '
+          set -eu
+          pip install --no-cache-dir -q -r requirements.txt
+          pip install --no-cache-dir -q pylint
+          python .ci_pylint_gate.py
+        '
     '''
   }
 
@@ -66,20 +78,9 @@ node {
   }
 
   stage('Trigger ManifestUpdate') {
-    if (env.JOB_NAME == 'buildimage') {
-      build job: 'updatemanifest',
-            parameters: [string(name: 'DOCKERTAG', value: imageTag)],
-            wait: false,
-            propagate: false
-    } else {
-      echo "Skipping downstream trigger on job: ${env.JOB_NAME}"
-    }
-
-    if (env.JOB_NAME == 'updatemanifest') {
-      stage('Update manifest') {
-        sh 'echo "Update manifest with tag: ${DOCKERTAG}"'
-      }
-      return
-    }
+    build job: 'updatemanifest',
+          parameters: [string(name: 'DOCKERTAG', value: imageTag)],
+          wait: false,
+          propagate: false
   }
 }
