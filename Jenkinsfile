@@ -5,14 +5,8 @@ node {
   def app
 
   if (env.JOB_NAME == 'updatemanifest') {
-    stage('Clone repository') {
-      checkout scm
-    }
-
-    stage('Update manifest') {
-      sh 'echo "Update manifest with tag: ${DOCKERTAG}"'
-    }
-
+    stage('Clone repository') { checkout scm }
+    stage('Update manifest') { sh 'echo "Update manifest with tag: ${DOCKERTAG}"' }
     return
   }
 
