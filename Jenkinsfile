@@ -10,10 +10,11 @@ node {
 
   stage('Quality: pylint') {
     sh '''
-      set -e
-      pip3 install --no-cache-dir -q pylint
-      SCORE="$(pylint app.py 2>/dev/null | awk -F'/' '/Your code has been rated at/ {gsub(/[^0-9.]/,"",$1); print $1}')"
-      
+      set -euo pipefail
+      docker run --rm -v "$PWD:/work" -w /work python:3.8-slim-buster sh -lc '
+        pip install --no-cache-dir -q pylint &&
+        SCORE="$(pylint app.py 2>/dev/null | awk -F"/" "/Your code has been rated at/ {gsub(/[^0-9.]/,\\\"\\\",$1); print $1}")" &&
+
       python3 - <<PY
       import sys
       score=float("${SCORE}" or 0)
