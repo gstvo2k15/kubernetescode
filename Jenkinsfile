@@ -9,38 +9,31 @@ node {
   }
 
   stage('Quality: pylint') {
-    sh '''#!/bin/sh
-  set -eu
+    sh '''
+      set -eu
 
-  docker run --rm -i \
-    -v "$PWD:/work" \
-    -w /work \
-    python:3.8-slim-buster sh <<'EOF'
-  set -eu
-  pip install --no-cache-dir -q pylint
-  python <<'PY'
-  import re
-  import subprocess
-  import sys
+      rm -f .ci_pylint_gate.py
+      printf '%s\n' \
+        'import re' \
+        'import subprocess' \
+        'import sys' \
+        '' \
+        'p = subprocess.run(["pylint","app.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)' \
+        'print(p.stdout, end="")' \
+        'm = re.search(r"rated at\\s+([0-9.]+)/10", p.stdout)' \
+        'score = float(m.group(1)) if m else 0.0' \
+        'print(f"pylint_score={score}")' \
+        'sys.exit(0 if score >= 8.0 else 1)' \
+        > .ci_pylint_gate.py
 
-  result = subprocess.run(
-      ["pylint", "app.py"],
-      stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT,
-      text=True
-  )
-
-  print(result.stdout, end="")
-
-  match = re.search(r"rated at\\s+([0-9.]+)/10", result.stdout)
-  score = float(match.group(1)) if match else 0.0
-
-  print(f"pylint_score={score}")
-
-  sys.exit(0 if score >= 8.0 else 1)
-  PY
-  EOF
-  '''
+      docker run --rm \
+        -v "$PWD:/work" -w /work \
+        python:3.8-slim-buster sh -c '
+          set -eu
+          pip install --no-cache-dir -q pylint
+          python .ci_pylint_gate.py
+        '
+    '''
   }
 
   stage('Build image') {
