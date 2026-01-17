@@ -11,23 +11,38 @@ node {
   stage('Quality: pylint') {
     sh '''
       set -eu
-      docker run --rm -v "$PWD:/work" -w /work python:3.8-slim-buster sh -lc 
-      '
-        set -eu
-        pip install --no-cache-dir -q pylint
-        pylint app.py || true
 
-        python - <<PY
-        import re, subprocess, sys
-        p = subprocess.run(["pylint","app.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        print(p.stdout, end="")
-        m = re.search(r"rated at\\s+([0-9.]+)/10", p.stdout)
-        score = float(m.group(1)) if m else 0.0
-        print(f"pylint_score={score}")
-        sys.exit(0 if score >= 8.0 else 1)
-        PY
-      '
-    '''
+      docker run --rm -i \
+        -v "$PWD:/work" \
+        -w /work \
+        python:3.8-slim-buster sh <<'EOF'
+      set -eu
+
+      pip install --no-cache-dir -q pylint
+
+      python - <<'PY'
+      import re
+      import subprocess
+      import sys
+
+      result = subprocess.run(
+          ["pylint", "app.py"],
+          stdout=subprocess.PIPE,
+          stderr=subprocess.STDOUT,
+          text=True
+      )
+
+      print(result.stdout, end="")
+
+      match = re.search(r"rated at\\s+([0-9.]+)/10", result.stdout)
+      score = float(match.group(1)) if match else 0.0
+
+      print(f"pylint_score={score}")
+
+      sys.exit(0 if score >= 8.0 else 1)
+      PY
+      EOF
+        '''
   }
 
   stage('Build image') {
