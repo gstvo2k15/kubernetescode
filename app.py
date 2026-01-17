@@ -1,6 +1,11 @@
+"""Simple Flask app."""
+
 from flask import Flask
+
 app = Flask(__name__)
 
-@app.route('/')
+
+@app.get("/")
 def hello_world():
-    return 'Please subscribe, like, and comment on this video, TY!!!'
+    """Return a greeting."""
+    return "Please subscribe, like, and comment on this video, TY!!!"
