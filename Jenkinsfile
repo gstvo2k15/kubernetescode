@@ -74,5 +74,12 @@ node {
     } else {
       echo "Skipping downstream trigger on job: ${env.JOB_NAME}"
     }
+
+    if (env.JOB_NAME == 'updatemanifest') {
+      stage('Update manifest') {
+        sh 'echo "Update manifest with tag: ${DOCKERTAG}"'
+      }
+      return
+    }
   }
 }
