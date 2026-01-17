@@ -11,17 +11,22 @@ node {
   stage('Quality: pylint') {
     sh '''
       set -eu
-      docker run --rm -v "$PWD:/work" -w /work python:3.8-slim-buster sh -lc "
+      docker run --rm -v "$PWD:/work" -w /work python:3.8-slim-buster sh -lc 
+      '
         set -eu
         pip install --no-cache-dir -q pylint
-        set +e
-        pylint app.py
-        RC=\$?
-        set -e
-        SCORE=\$(pylint app.py 2>/dev/null | awk -F'/' '/Your code has been rated at/ {gsub(/[^0-9.]/,\\\"\\\", \\$1); print \\$1}')
-        echo pylint_score=\$SCORE
-        python -c \\"import sys; s=float('${SCORE}' or 0); sys.exit(0 if s>=8.0 else 1)\\"
-      "
+        pylint app.py || true
+
+        python - <<PY
+        import re, subprocess, sys
+        p = subprocess.run(["pylint","app.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        print(p.stdout, end="")
+        m = re.search(r"rated at\\s+([0-9.]+)/10", p.stdout)
+        score = float(m.group(1)) if m else 0.0
+        print(f"pylint_score={score}")
+        sys.exit(0 if score >= 8.0 else 1)
+        PY
+      '
     '''
   }
 
